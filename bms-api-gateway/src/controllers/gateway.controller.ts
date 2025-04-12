@@ -1,20 +1,10 @@
 import {del, get, param, patch, post, response,requestBody} from '@loopback/rest';
-import axios, {AxiosError} from 'axios';
-import {
-  validateAuthorPost,
-  validateAuthorPatch,
-  validateBookPost,
-  validateBookPatch,
-  validateCategoryPost,
-  validateCategoryPatch,
-} from '../validation/validation';
+import axios from 'axios';
 import {HttpErrors} from '@loopback/rest';
 import dotenv from 'dotenv';
 import { authenticate, STRATEGY, Strategy } from 'loopback4-authentication';
 import { authorize } from 'loopback4-authorization';
-// import { Validation } from '../validation/user.validation';
 import logger from '../services/logger.service';
-import { Client } from '@opensearch-project/opensearch/.';
 import { AuthorValidator } from '../validation/author.validate';
 import { BookValidator } from '../validation/book.validate';
 import { CategoryValidator } from '../validation/category.validate';
@@ -30,9 +20,6 @@ export class GatewayController {
       const response = await axios.get(`${process.env.BASE_URL_AUTHORS}`);
       const authors = response.data;
       const author = authors.find((a: any) => a.authorName.toLowerCase() === name.toLowerCase());
-      // if (!author) {
-      //   throw new HttpErrors.NotFound(`Author with name "${name}" not found`);
-      // }
       return author;
     } catch (error) {
       if (error instanceof HttpErrors.HttpError) throw error;
@@ -46,9 +33,6 @@ export class GatewayController {
       const response = await axios.get(`${process.env.BASE_URL_CATEGORIES}`);
       const categories = response.data;
       const category = categories.find((c: any) => c.genre.toLowerCase() === genre.toLowerCase());
-      // if (!category) {
-      //   throw new HttpErrors.NotFound(`Category with name "${genre}" not found`);
-      // }
       return category
     } catch (error) {
       if (error instanceof HttpErrors.HttpError) throw error;
@@ -64,14 +48,12 @@ export class GatewayController {
   async getAuthors(): Promise<any> {
     try {
       const response = await axios.get(`${process.env.BASE_URL_AUTHORS}`);
-      
       logger.info({
         message: 'Successfully retrieved authors',
         route: '/authors',
         method: 'GET',
         timestamp: new Date().toISOString(),
       });
-  
       return response.data;
     } catch (error) {
       logger.error({
@@ -94,14 +76,27 @@ export class GatewayController {
       AuthorValidator.getInstance().validate(authorData);
       if(authorData.authorName){
         const author = await this.getAuthorByName(authorData.authorName)
-        console.log("getAuthorByName", author);
+        // console.log("getAuthorByName", author);
         if(author){
           throw new HttpErrors.BadRequest('Author Already Exist');
         }
       }
       const response = await axios.post(`${process.env.BASE_URL_AUTHORS}`, authorData);
+      logger.info({
+        message: 'Successfully Post Author',
+        route: '/author',
+        method: 'POST',
+        timestamp: new Date().toISOString(),
+      });
       return response.data;
     } catch (error) {
+      logger.error({
+        message: 'Failed to Post authors',
+        route: '/authors',
+        method: 'POST',
+        error: error.message,
+        timestamp: new Date().toISOString(),
+      });
       if (error instanceof HttpErrors.HttpError) throw error;
       throw new HttpErrors.InternalServerError(`Failed to create author: ${error.message}`);
     }
@@ -117,8 +112,21 @@ export class GatewayController {
     try {
       AuthorValidator.getInstance().validate(authorData);
       const response = await axios.patch(`${process.env.BASE_URL_AUTHORS}/${id}`, authorData);
+      logger.info({
+        message: 'Successfully Update the Author',
+        route: '/logs',
+        method: 'PATCH',
+        timestamp: new Date().toISOString(),
+      });
       return response.data;
     } catch (error) {
+      logger.error({
+        message: 'Failed to Update authors',
+        route: '/authors',
+        method: 'Patch',
+        error: error.message,
+        timestamp: new Date().toISOString(),
+      });
       if (error instanceof HttpErrors.HttpError) throw error;
       throw new HttpErrors.InternalServerError(`Failed to update author: ${error.message}`);
     }
@@ -130,8 +138,21 @@ export class GatewayController {
   async deleteAuthor(@param.path.number('id') id: number): Promise<any> {
     try {
       const response = await axios.delete(`${process.env.BASE_URL_AUTHORS}/${id}`);
+      logger.info({
+        message: 'Successfully Delete the Author',
+        route: '/logs',
+        method: 'DELETE',
+        timestamp: new Date().toISOString(),
+      });
       return response.data;
     } catch (error) {
+      logger.error({
+        message: 'Failed to Delete authors',
+        route: '/authors',
+        method: 'DELETE',
+        error: error.message,
+        timestamp: new Date().toISOString(),
+      });
       throw new HttpErrors.InternalServerError(`Failed to delete author: ${error.message}`);
     }
   }
@@ -142,8 +163,21 @@ export class GatewayController {
   async getAuthorById(@param.path.string('id') id: string): Promise<any> {
     try {
       const response = await axios.get(`${process.env.BASE_URL_AUTHORS}/${id}`);
+      logger.info({
+        message: 'Successfully Get the Author by ID',
+        route: '/logs',
+        method: 'GET',
+        timestamp: new Date().toISOString(),
+      });
       return response.data;
     } catch (error) {
+      logger.error({
+        message: 'Failed to retrieve authors by ID',
+        route: '/authors/{id}',
+        method: 'GET',
+        error: error.message,
+        timestamp: new Date().toISOString(),
+      });
       if (axios.isAxiosError(error) && error.response?.status === 404) {
         throw new HttpErrors.NotFound(`Author with ID "${id}" not found`);
       }
@@ -175,8 +209,21 @@ export class GatewayController {
           }
         })
       );
+      logger.info({
+        message: 'Successfully retrieved books',
+        route: '/books',
+        method: 'GET',
+        timestamp: new Date().toISOString(),
+      });
       return enrichedBooks;
     } catch (error) {
+      logger.error({
+        message: 'Failed to retrieve Book',
+        route: '/books',
+        method: 'GET',
+        error: error.message,
+        timestamp: new Date().toISOString(),
+      });
       if (error instanceof HttpErrors.HttpError) throw error;
       throw new HttpErrors.InternalServerError(`Failed to retrieve books: ${error.message}`);
     }
@@ -193,14 +240,13 @@ export class GatewayController {
       let author = null;
       if(bookData.authorName){
         author = await this.getAuthorByName(bookData.authorName)
-        console.log("getAuthorByName", author);
+        // console.log("getAuthorByName", author);
         if(!author){
           throw new HttpErrors.BadRequest('Author not Found');
         }
       }
       const authorId = author.authorId;
-      console.log("BookData:", bookData);
-      
+      // console.log("BookData:", bookData);
       let categoryId = null;
       let category = null;
       if (bookData.genre) {
@@ -219,9 +265,21 @@ export class GatewayController {
 
       const response = await axios.post(process.env.BASE_URL_BOOKS as string, bookDataPayload);
       const createdBook = response.data;
-
+      logger.info({
+        message: 'Successfully Post Book',
+        route: '/books',
+        method: 'POST',
+        timestamp: new Date().toISOString(),
+      });
       return { ...createdBook, author, category };
     } catch (error) {
+      logger.error({
+        message: 'Failed to Post books',
+        route: '/books',
+        method: 'POST',
+        error: error.message,
+        timestamp: new Date().toISOString(),
+      });
       if (error instanceof HttpErrors.HttpError) throw error; 
       throw new HttpErrors.InternalServerError(`Failed to create book: ${error.message}`);
     }
@@ -247,10 +305,22 @@ export class GatewayController {
         const category = await this.getCategoryByName(bookData.categoryName);
         updatedData.categoryId = category.categoryId;
       }
-
       const response = await axios.patch(`${process.env.BASE_URL_BOOKS}/${id}`, updatedData);
+      logger.info({
+        message: 'Successfully Update the Book',
+        route: '/books/{id}',
+        method: 'PATCH',
+        timestamp: new Date().toISOString(),
+      });
       return response.data;
     } catch (error) {
+      logger.error({
+        message: 'Failed to Update book',
+        route: '/books/{id}',
+        method: 'PATCH',
+        error: error.message,
+        timestamp: new Date().toISOString(),
+      });
       if (error instanceof HttpErrors.HttpError) throw error;
       throw new HttpErrors.InternalServerError(`Failed to update book: ${error.message}`);
     }
@@ -262,8 +332,20 @@ export class GatewayController {
   async deleteBook(@param.path.string('id') id: string): Promise<any> {
     try {
       const response = await axios.delete(`${process.env.BASE_URL_BOOKS}/${id}`);
+      logger.info({
+        message: 'Successfully Delete Book',
+        route: '/books/{id}',
+        method: 'DELETE',
+        timestamp: new Date().toISOString(),
+      });
       return response.data;
     } catch (error) {
+      logger.info({
+        message: 'Failed to Delete Book',
+        route: '/books/{id}',
+        method: 'DELETE',
+        timestamp: new Date().toISOString(),
+      });
       throw new HttpErrors.InternalServerError(`Failed to delete book: ${error.message}`);
     }
   }
@@ -280,9 +362,20 @@ export class GatewayController {
       const category = book.categoryId
         ? await axios.get(`${process.env.BASE_URL_CATEGORIES}/${book.categoryId}`).then(res => res.data)
         : null;
-
+        logger.info({
+          message: 'Successfully Get the Book by ID',
+          route: '/books/{id}',
+          method: 'GET',
+          timestamp: new Date().toISOString(),
+        });
       return { ...book, author, category };
     } catch (error) {
+      logger.info({
+        message: 'Failed Get the Book by ID',
+        route: '/books/{id}',
+        method: 'GET',
+        timestamp: new Date().toISOString(),
+      });
       if (axios.isAxiosError(error) && error.response?.status === 404) {
         throw new HttpErrors.NotFound(`Book with ID "${id}" not found`);
       }
@@ -297,8 +390,20 @@ export class GatewayController {
   async getCategories(): Promise<any> {
     try {
       const response = await axios.get(`${process.env.BASE_URL_CATEGORIES}`);
+      logger.info({
+        message: 'Successfully Get Category',
+        route: '/categories',
+        method: 'GET',
+        timestamp: new Date().toISOString(),
+      });
       return response.data;
     } catch (error) {
+      logger.info({
+        message: 'Failed to Get Category',
+        route: '/categories',
+        method: 'GET',
+        timestamp: new Date().toISOString(),
+      });
       throw new HttpErrors.InternalServerError(`Failed to retrieve categories: ${error.message}`);
     }
   }
@@ -316,8 +421,20 @@ export class GatewayController {
         throw new HttpErrors.BadRequest('Genre is Already Exist');
       }
       const response = await axios.post(`${process.env.BASE_URL_CATEGORIES}`, categoryData);
+      logger.info({
+        message: 'Successfully Post Category',
+        route: '/categories',
+        method: 'POST',
+        timestamp: new Date().toISOString(),
+      });
       return response.data;
     } catch (error) {
+      logger.info({
+        message: 'Failed Post Category',
+        route: '/categories',
+        method: 'POST',
+        timestamp: new Date().toISOString(),
+      });
       if (error instanceof HttpErrors.HttpError) throw error;
       throw new HttpErrors.InternalServerError(`Failed to create category: ${error.message}`);
     }
@@ -333,8 +450,20 @@ export class GatewayController {
     try {
       CategoryValidator.getInstance().validate(categoryData);
       const response = await axios.patch(`${process.env.BASE_URL_CATEGORIES}/${id}`, categoryData);
+      logger.info({
+        message: 'Successfully Update the Category',
+        route: '/categories/{id}',
+        method: 'PATCH',
+        timestamp: new Date().toISOString(),
+      });
       return response.data;
     } catch (error) {
+      logger.info({
+        message: 'Failed Update the Category',
+        route: '/categories/{id}',
+        method: 'PATCH',
+        timestamp: new Date().toISOString(),
+      });
       if (error instanceof HttpErrors.HttpError) throw error;
       throw new HttpErrors.InternalServerError(`Failed to update category: ${error.message}`);
     }
@@ -346,6 +475,12 @@ export class GatewayController {
   async deleteCategory(@param.path.number('id') id: number): Promise<any> {
     try {
       const response = await axios.delete(`${process.env.BASE_URL_CATEGORIES}/${id}`);
+      logger.info({
+        message: 'Successfully Delete the Category',
+        route: '/categories',
+        method: 'DELETE',
+        timestamp: new Date().toISOString(),
+      });
       return response.data;
     } catch (error) {
       throw new HttpErrors.InternalServerError(`Failed to delete category: ${error.message}`);
@@ -358,8 +493,20 @@ export class GatewayController {
   async getCategoryById(@param.path.string('id') id: string): Promise<any> {
     try {
       const response = await axios.get(`${process.env.BASE_URL_CATEGORIES}/${id}`);
+      logger.info({
+        message: 'Successfully Get the Category by ID',
+        route: '/categories/{id}',
+        method: 'GET',
+        timestamp: new Date().toISOString(),
+      });
       return response.data;
     } catch (error) {
+      logger.info({
+        message: 'Failed Get the Category by ID',
+        route: '/categories/{id}',
+        method: 'GET',
+        timestamp: new Date().toISOString(),
+      });
       if (axios.isAxiosError(error) && error.response?.status === 404) {
         throw new HttpErrors.NotFound(`Category with ID "${id}" not found`);
       }
