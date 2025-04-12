@@ -19,5 +19,8 @@ export enum Permission {
     PATCH_CATEGORY = 'PATCH_CATEGORY',
     DELETE_CATEGORY = 'DELETE_CATEGORY',
     GET_CATEGORY_BY_ID = 'GET_CATEGORY_BY_ID',
+
+    // Logs Permissions
+    GET_LOGS = 'GET_LOGS'
   }
   

@@ -2,7 +2,7 @@ import { post, requestBody } from '@loopback/rest';
 import axios from 'axios';
 import { HttpErrors } from '@loopback/rest';
 import dotenv from 'dotenv';
-import { Validation } from '../validation/user.validation';
+import { UserValidator } from '../validation/user.validate';
 
 dotenv.config();
 
@@ -13,14 +13,14 @@ export class AuthController {
   @post('/signup')
   async postSignup(@requestBody() userData: any): Promise<any> {
     try {
-      // Validate email and password
-      Validation.validateEmail(userData.email);
-      Validation.validatePassword(userData.password);
       // Make the downstream request
+      UserValidator.getInstance().validateSignUp(userData);
       const response = await axios.post(`${process.env.BASE_URL_USER_SIGNUP}`, userData);
       return response.data;
     } catch (error) {
-      if (error instanceof HttpErrors.HttpError) throw error;
+      if ((error.status >= 400) && (error.status <= 499) ){
+        throw new HttpErrors.BadRequest(`Email already Registered`);
+      }
       throw new HttpErrors.InternalServerError(`Failed to create user: ${error.message}`);
     }
   }
@@ -28,13 +28,17 @@ export class AuthController {
   async postLogin(@requestBody() userData: any): Promise<any> {
     try {
       // Validate email and password
-      Validation.validateEmail(userData.email);
-      Validation.validatePassword(userData.password);
+      UserValidator.getInstance().validateLogIn(userData);
       const response = await axios.post(`${process.env.BASE_URL_USER_LOGIN}`, userData);
       return response.data;
     } catch (error) {
-      if (error instanceof HttpErrors.HttpError) throw error;
-      throw new HttpErrors.InternalServerError(`Failed to create user: ${error.message}`);
+      if (error.status >= 401 ){
+        throw new HttpErrors.BadRequest(`Wrong Email or Password`);
+      }
+      if ((error.status >= 400) && (error.status <= 499) ){
+        throw new HttpErrors.BadRequest(`Email and Password Required`);
+      }
+      throw new HttpErrors.InternalServerError(`Failed to Login you: ${error.message}`);
     }
   }
 }

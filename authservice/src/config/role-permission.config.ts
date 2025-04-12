@@ -18,5 +18,6 @@ export const RolePermissions: Record<UserRole, Permission[]> = {
     Permission.GET_AUTHOR, Permission.GET_AUTHOR_BY_ID,
     Permission.GET_BOOK, Permission.GET_BOOK_BY_ID,
     Permission.GET_CATEGORY, Permission.GET_CATEGORY_BY_ID,
+    Permission.GET_LOGS
   ],
 };

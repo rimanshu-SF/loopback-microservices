@@ -9,6 +9,7 @@ import {
   getModelSchemaRef,
   requestBody,
   response,
+  HttpErrors,
 } from '@loopback/rest';
 import {User} from '../models';
 import {UserRepository} from '../repositories';
@@ -76,7 +77,7 @@ async jwtSignup(
     where: { email: userData.email },
   });
   if (existingUser) {
-    throw new Error('User with this email already exists');
+    throw new HttpErrors.BadRequest('User with this email already exists');
   }
 
   const saltRounds = 10;
@@ -125,13 +126,13 @@ async jwtSignup(
       where: {email: credentials.email},
     });
     if (!user || !user.password) {
-      throw new Error('Invalid credentials');
+      throw new HttpErrors[401]('Invalid credentials');
     }
 
     // Verify password
     const passwordMatch = await bcrypt.compare(credentials.password, user.password);
     if (!passwordMatch) {
-      throw new Error('Invalid credentials');
+      throw new HttpErrors[401]('Invalid credentials');
     }    
 
     const userPermissions = user.permissions || [];
