@@ -1,0 +1,26 @@
+export enum Permission {
+    // Author Permissions
+    GET_AUTHOR = 'GET_AUTHOR',
+    POST_AUTHOR = 'POST_AUTHOR',
+    PATCH_AUTHOR = 'PATCH_AUTHOR',
+    DELETE_AUTHOR = 'DELETE_AUTHOR',
+    GET_AUTHOR_BY_ID = 'GET_AUTHOR_BY_ID',
+  
+    // Book Permissions
+    GET_BOOK = 'GET_BOOK',
+    POST_BOOK = 'POST_BOOK',
+    PATCH_BOOK = 'PATCH_BOOK',
+    DELETE_BOOK = 'DELETE_BOOK',
+    GET_BOOK_BY_ID = 'GET_BOOK_BY_ID',
+  
+    // Category Permissions
+    GET_CATEGORY = 'GET_CATEGORY',
+    POST_CATEGORY = 'POST_CATEGORY',
+    PATCH_CATEGORY = 'PATCH_CATEGORY',
+    DELETE_CATEGORY = 'DELETE_CATEGORY',
+    GET_CATEGORY_BY_ID = 'GET_CATEGORY_BY_ID',
+
+    // Logs Permissions
+    GET_LOGS = 'GET_LOGS'
+  }
+  
