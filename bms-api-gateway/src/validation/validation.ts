@@ -58,7 +58,9 @@ export const validateCategoryPost = (data: any) => {
   if (!data || typeof data !== 'object') {
     throw new HttpErrors.BadRequest('Request body must be an object');
   }
-  if (!data.genre || typeof data.genre !== 'string') {
+  console.log("Data:",data);
+  
+  if (!data.categoryName || typeof data.categoryName !== 'string') {
     throw new HttpErrors.BadRequest('Genre is required and must be a string');
   }
 };

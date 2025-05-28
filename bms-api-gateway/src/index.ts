@@ -1,8 +1,9 @@
+import 'newrelic';
 import {ApplicationConfig, BmsApplication} from './application';
 import {GatewayController} from './controllers/gateway.controller';
 export * from './application';
 
-export async function main(options: ApplicationConfig = {}) {
+export async function main(options: ApplicationConfig = {}) {  
   const app = new BmsApplication(options);
   await app.boot();
 

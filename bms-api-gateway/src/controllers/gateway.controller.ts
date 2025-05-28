@@ -117,7 +117,6 @@ export class GatewayController {
             
       const enrichedBooks = await Promise.all(
         books.map(async (book: any) => {
-          console.log("Book:",book);
           try {
             const author = await axios.get(`${process.env.BASE_URL_AUTHORS}/${book.authorId}`).then(res => res.data);
             const category = book.categoryId
